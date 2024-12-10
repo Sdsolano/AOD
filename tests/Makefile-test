@@ -1,0 +1,47 @@
+# Variables de prueba
+PROGRAM = ../bin/distanceEdition
+VALGRIND = valgrind
+VALGRIND_FLAGS = --tool=cachegrind --D1=4096,4,64
+
+# Archivos de prueba
+TEST_FILES = f1.fna f2.fna enonce-seq1 enonce-seq2
+
+# Casos de prueba
+TEST_CASES = test1 test2 test3 test4 test5
+VALGRIND_CASES = $(TEST_CASES:%=%-valgrind)
+
+.PHONY: all all-valgrind clean $(TEST_CASES) $(VALGRIND_CASES)
+
+all: $(TEST_CASES)
+
+all-valgrind: $(VALGRIND_CASES)
+
+# Casos de prueba individuales
+test1:
+	@echo "Ejecutando test1: Secuencias del enunciado"
+	$(PROGRAM) enonce-seq1 0 10 enonce-seq2 0 8
+
+test2:
+	@echo "Ejecutando test2: Archivos pequeños"
+	$(PROGRAM) f1.fna 0 9 f2.fna 0 55
+
+test3:
+	@echo "Ejecutando test3: SARS-CoV-2 pequeño"
+	$(PROGRAM) ../benchmark/wuhan_hu_1.fasta 116 1000 ../benchmark/ba52_recent_omicron.fasta 153 1000
+
+test4:
+	@echo "Ejecutando test4: SARS-CoV-2 mediano"
+	$(PROGRAM) ../benchmark/wuhan_hu_1.fasta 116 10000 ../benchmark/ba52_recent_omicron.fasta 153 10000
+
+test5:
+	@echo "Ejecutando test5: Arabidopsis pequeño"
+	$(PROGRAM) ../benchmark/GCF_000001735.4_TAIR10.1_genomic.fna 77328790 1000 \
+              ../benchmark/GCA_024498555.1_ASM2449855v1_genomic.fna 30808129 1000
+
+# Casos de prueba con valgrind
+%-valgrind:
+	@echo "Ejecutando $* con valgrind"
+	$(VALGRIND) $(VALGRIND_FLAGS) $(MAKE) $*
+
+clean:
+	rm -f cachegrind.out.*
